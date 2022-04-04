@@ -10,39 +10,48 @@ namespace ALGbellmanford
     {
         static void Main(string[] args)
         {
-            //Source vertex
-            int source = 0;
-            int[][] adjacencyMatrix = new int[][] { /**vrchol 1 */new int[] { 0, 0, 0, 3, 12 },   
-                                                    /**vrchol 2 */new int[] { 0, 0, 2, 0, 0 },
-                                                    /**vrchol 3 */new int[] { 0, 0, 0, -2,0 },
-                                                    /**vrchol 4 */new int[] { 0, 5, -3, 0, 0 },
-                                                    /**vrchol 5 */new int[] { 0, 0, -3, 0, 0 } };
+            //Startovací vrchol
+            int start = 0;                         // cesta mezi vrcholy     A  B  C  D  E
+            int[][] vrcholyCesty = new int[][] {    /**vrchol A */new int[] { 0, 4, 2, 0, 0 },   
+                                                    /**vrchol B */new int[] { 0, 0, 3, 2, 3 },
+                                                    /**vrchol C */new int[] { 0, 1, 0, 4, 5 },
+                                                    /**vrchol D */new int[] { 0, 0, 0, 0, 0 },
+                                                    /**vrchol E */new int[] { 0, 0, 0,-5, 0 } };
 
-            var numberOfVertex = adjacencyMatrix[0].Length;
-            int[] distance = Enumerable.Repeat(int.MaxValue, numberOfVertex).ToArray();
-            int[] parent = Enumerable.Repeat(-1, numberOfVertex).ToArray();
-            distance[source] = 0;
+            var početVrcholu = vrcholyCesty[0].Length;
+            int[] distance = Enumerable.Repeat(int.MaxValue, početVrcholu).ToArray();
+            int[] parent = Enumerable.Repeat(-1, početVrcholu).ToArray();
+            distance[start] = 0;
             List<Edge> edges = new List<Edge>();
 
-            //Insering all edges in list
-            for (int i = 0; i < adjacencyMatrix[0].Length; i++)
-                for (int j = 0; j < adjacencyMatrix[0].Length; j++)
-                {
-                    if (adjacencyMatrix[i][j] != 0)
-                        edges.Add(new Edge() { U = i, V = j, Weight = adjacencyMatrix[i][j] });
-                }
-            //Calling Bellman-Ford Algorithm
-            if(BellmanFord(edges, numberOfVertex, distance, parent))
+            //Doplnění všech cest do listu
+            for (int i = 0; i < vrcholyCesty[0].Length; i++)
             {
-                PrintPath(0, 2, distance, parent);
+                for (int j = 0; j < vrcholyCesty[1].Length; j++)
+                {
+                    if (vrcholyCesty[i][j] != 0)
+                        edges.Add(new Edge() { From = i, To = j, Weight = vrcholyCesty[i][j] });
+                }
+            }
+
+            //Zavoláme Bellman Ford algoritmus
+            if(BellmanFord(edges, početVrcholu, distance, parent))
+            {
+                Console.WriteLine("od vrcholu A do vrcholu B");
+                VykresliCestu(0, 1, distance, parent);
+                Console.WriteLine("od vrcholu A do vrcholu C");
+                VykresliCestu(0, 2, distance, parent);
+                Console.WriteLine("od vrcholu A do vrcholu D");
+                VykresliCestu(0, 3, distance, parent);
+                Console.WriteLine("od vrcholu A do vrcholu E");
+                VykresliCestu(0, 4, distance, parent);
             } else
             {
                 Console.WriteLine("Negativní cyklus");
             }
-            //Prints path
 
 
-            Console.ReadLine();
+            Console.ReadKey();
         }
 
         static void Relax(int u, int v, int weight, int[] distance, int[] parent)
@@ -54,21 +63,21 @@ namespace ALGbellmanford
             }
         }
 
-        static bool BellmanFord(List<Edge> edges, int vertexCount, int[] distance, int[] parent)
+        static bool BellmanFord(List<Edge> edges, int pocetVrcholu, int[] distance, int[] parent)
         {
             //Relaxing each edge by traversing from each vertex and so complexity is O(V.E)
-            for (int i = 1; i < vertexCount; i++)
+            for (int i = 1; i < pocetVrcholu; i++)
             {
                 foreach (Edge edge in edges)
                 {
-                    Relax(edge.U, edge.V, edge.Weight, distance, parent);
+                    Relax(edge.From, edge.To, edge.Weight, distance, parent);
                 }
             }
 
             //Checking if no negative-weight cycle exist
             foreach (Edge edge in edges)
             {
-                if (distance[edge.U] != int.MaxValue && distance[edge.V] > distance[edge.U] + edge.Weight)
+                if (distance[edge.From] != int.MaxValue && distance[edge.To] > distance[edge.From] + edge.Weight)
                 {
                     return false;
                 }
@@ -77,26 +86,45 @@ namespace ALGbellmanford
             return true;
         }
 
-        public static void PrintPath(int u, int v, int[] distance, int[] parent)
+        public static void VykresliCestu(int from, int to, int[] distance, int[] parent)
         {
-            if (v < 0 || u < 0)
+            if (to < 0 || from < 0)
             {
                 return;
             }
-            if (v != u)
+            if (to != from)
             {
-                PrintPath(u, parent[v], distance, parent);
-                Console.WriteLine("Vrchol {0} hodnota: {1}", v, distance[v]);
+                VykresliCestu(from, parent[to], distance, parent);
+                Console.WriteLine("Vrchol {0} hodnota: {1}", convertToChar(to), distance[to]);
             }
             else
-                Console.WriteLine("Vrchol {0} hodnota: {1}", v, distance[v]);
+                Console.WriteLine("Vrchol {0} hodnota: {1}", convertToChar(to), distance[to]);
+        }
+
+        public static string convertToChar(int to)
+        {
+            switch(to)
+            {
+                case 0:
+                    return "A";
+                case 1:
+                    return "B";
+                case 2:
+                    return "C";
+                case 3:
+                    return "D";
+                case 4:
+                    return "E";
+                default:
+                    return "";
+            }
         }
     }
 
     public class Edge
     {
-        public int U { get; set; }
-        public int V { get; set; }
+        public int From { get; set; }
+        public int To { get; set; }
         public int Weight { get; set; }
     }
 }
